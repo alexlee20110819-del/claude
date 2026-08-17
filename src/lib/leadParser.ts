@@ -243,8 +243,16 @@ export function buildDataset({
 
     const businessName = toDisplayString(pick(row, 'businessName'));
     if (!businessName) {
-      // Blank or spacer row — silently ignore truly empty ones.
-      if (row.some((cell) => toDisplayString(cell) !== '')) skipped += 1;
+      // Only a row that looks like a half-entered lead is worth reporting.
+      //
+      // Checking "any non-empty cell" over-reports badly on a real sheet: a
+      // checkbox column applies to every row of the grid, so a Google Sheets
+      // CSV export arrives with ~1000 rows each carrying a bare FALSE. Those
+      // are empty rows, not dropped leads. Identifying fields are the signal.
+      const looksLikeALead = (['phoneNumber', 'trade', 'location'] as FieldName[]).some(
+        (field) => toDisplayString(pick(row, field)) !== '',
+      );
+      if (looksLikeALead) skipped += 1;
       continue;
     }
 
