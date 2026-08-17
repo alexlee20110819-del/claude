@@ -142,6 +142,44 @@ Saved edits always win over bundled data: the baked-in list only seeds a browser
 stored yet, so importing a newer file is never reverted. On a personal build, the reset button
 clears your edits and restores the bundled list rather than emptying the app.
 
+## When you add more leads to the spreadsheet
+
+Add rows in Excel as usual, then press **Replace lead file** and pick the updated workbook.
+Nothing is lost:
+
+- Leads already in the app keep their status, success tick, notes and follow-up dates, matched on
+  **business name + phone number**.
+- New rows arrive as `Not contacted`, ready to work.
+- Counts, filters and the trade/location dropdowns all pick up the new rows automatically.
+
+Some practical notes:
+
+- Add rows to the **`All Current Leads`** sheet. That is the sheet the app reads; rows added only
+  to another tab will not appear.
+- Row order and position do not matter, and a title or footnote above or below the table is fine —
+  the header row is located by content.
+- For the evidence link you can either attach a real hyperlink or just paste the URL as plain text
+  into the `Source / Verification` column. Both work.
+- Changing a business's **phone number** breaks the match, so that lead is treated as new and its
+  notes are dropped. Correct a typo in a name freely; correct a phone number and expect to re-enter
+  that lead's history.
+- Removing a row removes that lead and its notes. The confirmation screen says so before you commit.
+
+### Updating a bundled build
+
+`Replace lead file` updates the browser you did it in. A build with leads baked in still ships the
+old list to every *other* device, so refresh the build itself when the spreadsheet grows:
+
+```bash
+npm run bundle:leads -- path/to/updated.xlsx --password "your-password"
+npm run build:private
+npm run verify:build -- --password "your-password"
+```
+
+Then redeploy. Anyone who already unlocked that site keeps working from their saved copy — the
+bundled list only seeds a browser with nothing stored — so they should use **Replace lead file**
+to pull the new rows in, or reset to take the fresh bundle.
+
 ## How local persistence works
 
 Three `localStorage` keys hold everything:
