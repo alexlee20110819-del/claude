@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vite
+
+# Lead spreadsheets stay local — never commit contact data.
+*.xlsx
+*.xls
+*.csv
+!src/**/*.csv
