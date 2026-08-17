@@ -142,6 +142,33 @@ Saved edits always win over bundled data: the baked-in list only seeds a browser
 stored yet, so importing a newer file is never reverted. On a personal build, the reset button
 clears your edits and restores the bundled list rather than emptying the app.
 
+## Live sync from a Google Sheet
+
+The app can keep itself in step with a Google Sheet, so adding a row updates every device with no
+import step. Press **Set up live sync** in the header, or bake a URL in at build time with
+`VITE_LEADS_URL`.
+
+In Google Sheets: **File → Share → Publish to web**, pick the lead sheet, choose
+**Comma-separated values (.csv)**, publish, and paste the link. An ordinary `/edit` link works
+too — it is converted to a CSV endpoint automatically.
+
+The sheet is fetched once per page load and whenever you press **Sync now**. Your statuses, notes
+and follow-up dates never leave your device and are re-attached on every sync by business name and
+phone number.
+
+Two things that decide whether this works:
+
+- **Put the evidence URL in the sheet as plain text.** CSV export drops cell links, so a cell that
+  *links* the words "Open Google evidence" exports as that text and the URL is lost. The
+  `Source / Verification` column must hold the URL itself. (The parser accepts either, so an
+  uploaded `.xlsx` with real hyperlinks still works — this applies only to synced sheets.)
+- **A published sheet is readable by anyone with the link.** Publishing makes the lead list
+  effectively public, which matters if you also password-protected the site.
+
+A sheet that fails to load, returns a sign-in page, or parses to zero leads is refused rather than
+applied: the error is shown and your existing leads are left untouched, so a bad link or no
+connection can never wipe your list.
+
 ## When you add more leads to the spreadsheet
 
 Add rows in Excel as usual, then press **Replace lead file** and pick the updated workbook.

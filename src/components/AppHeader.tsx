@@ -1,8 +1,8 @@
-import { Download, MapPinned, RefreshCw, Trash2 } from 'lucide-react';
+import { Cloud, CloudOff, Download, Loader2, MapPinned, RefreshCw, Trash2 } from 'lucide-react';
 import type { LeadDataset } from '@/types/lead';
 import { Button } from '@/components/ui/Button';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatRelative } from '@/lib/utils';
 
 interface AppHeaderProps {
   dataset: LeadDataset | null;
@@ -10,6 +10,11 @@ interface AppHeaderProps {
   onReplace: () => void;
   onExport: () => void;
   onReset: () => void;
+  remoteUrl: string | null;
+  syncing: boolean;
+  lastSync: string;
+  onSync: () => void;
+  onOpenSyncSettings: () => void;
 }
 
 export function AppHeader({
@@ -18,6 +23,11 @@ export function AppHeader({
   onReplace,
   onExport,
   onReset,
+  remoteUrl,
+  syncing,
+  lastSync,
+  onSync,
+  onOpenSyncSettings,
 }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -40,7 +50,10 @@ export function AppHeader({
                   )}
                   <span className="hidden sm:inline">
                     {' · '}
-                    {dataset.leads.length} leads · imported {formatDateTime(dataset.importedAt)}
+                    {dataset.leads.length} leads
+                    {remoteUrl
+                      ? ` · synced ${syncing ? 'now…' : formatRelative(lastSync).toLowerCase()}`
+                      : ` · imported ${formatDateTime(dataset.importedAt)}`}
                   </span>
                 </>
               ) : (
@@ -52,6 +65,26 @@ export function AppHeader({
 
         {dataset && (
           <div className="flex flex-wrap items-center gap-2">
+            {remoteUrl ? (
+              <Tooltip label="Check the linked Google Sheet for changes">
+                <Button variant="outline" onClick={onSync} disabled={syncing}>
+                  {syncing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Cloud className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <span className="hidden sm:inline">{syncing ? 'Syncing…' : 'Sync now'}</span>
+                </Button>
+              </Tooltip>
+            ) : (
+              <Tooltip label="Keep this site in step with a Google Sheet">
+                <Button variant="outline" onClick={onOpenSyncSettings}>
+                  <CloudOff className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">Set up live sync</span>
+                </Button>
+              </Tooltip>
+            )}
+
             <Tooltip label="Download the leads currently shown, as CSV">
               <Button variant="outline" onClick={onExport} disabled={filteredCount === 0}>
                 <Download className="h-4 w-4" aria-hidden="true" />
@@ -67,6 +100,14 @@ export function AppHeader({
                 <span className="sm:hidden">Replace</span>
               </Button>
             </Tooltip>
+
+            {remoteUrl && (
+              <Tooltip label="Change or disconnect the linked sheet">
+                <Button variant="ghost" size="icon" onClick={onOpenSyncSettings} aria-label="Live sync settings">
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </Tooltip>
+            )}
 
             <Tooltip label="Delete all locally saved leads and edits">
               <Button variant="ghost" size="icon" onClick={onReset} aria-label="Reset all local data">

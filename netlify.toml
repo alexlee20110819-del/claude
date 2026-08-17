@@ -14,10 +14,11 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     Referrer-Policy = "no-referrer"
-    # The app is entirely self-contained: no external scripts, fonts, or
-    # network calls. Lead data is read in the browser and never sent anywhere,
-    # and this policy enforces that at runtime.
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'self'"
+    # No external scripts, styles, or fonts — the page is self-contained.
+    # `connect-src` additionally allows docs.google.com so live sheet sync can
+    # fetch a published CSV. That is the only outbound destination permitted;
+    # lead data is still never sent anywhere, only read.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://docs.google.com https://*.googleusercontent.com; form-action 'none'; frame-ancestors 'none'; base-uri 'self'"
 
 # Hashed build assets are immutable.
 [[headers]]

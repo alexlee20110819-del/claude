@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Inbox, ShieldCheck } from 'lucide-react';
 import type { Filters, ImportResult, Lead, OutreachStatus } from '@/types/lead';
 import { useLeads } from '@/hooks/useLeads';
@@ -13,6 +13,8 @@ import { LeadDetailDrawer } from '@/components/LeadDetailDrawer';
 import { LeadTable } from '@/components/LeadTable';
 import { SummaryCards, statusFilterPatch } from '@/components/SummaryCards';
 import { UnlockScreen } from '@/components/UnlockScreen';
+import { SyncSettingsModal } from '@/components/SyncSettingsModal';
+import { getRemoteUrl } from '@/lib/remoteSource';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ToastProvider, useToast } from '@/components/ui/Toast';
@@ -50,6 +52,10 @@ function LeadManager() {
     importDataset,
     replaceDataset,
     resetAll,
+    syncFromRemote,
+    syncing,
+    lastSync,
+    syncError,
   } = useLeads();
 
   const { toast } = useToast();
@@ -61,6 +67,8 @@ function LeadManager() {
   const [resetOpen, setResetOpen] = useState(false);
   // Lets the user bypass the unlock screen to import their own file instead.
   const [skipUnlock, setSkipUnlock] = useState(false);
+  const [syncSettingsOpen, setSyncSettingsOpen] = useState(false);
+  const [remoteUrl, setRemoteUrlState] = useState<string | null>(null);
 
   // Re-read the selected lead from the live list so the drawer reflects edits.
   const selectedLead = useMemo(
@@ -164,6 +172,46 @@ function LeadManager() {
     [toast, unlockLeads],
   );
 
+  const runSync = useCallback(
+    async (announceNoChange: boolean) => {
+      const summary = await syncFromRemote();
+      if (!summary) return;
+
+      if (summary.unchanged) {
+        if (announceNoChange) toast('Already up to date with your sheet.', 'info');
+        return;
+      }
+
+      const parts: string[] = [];
+      if (summary.added > 0) parts.push(`${summary.added} new lead${summary.added === 1 ? '' : 's'}`);
+      if (summary.removed > 0)
+        parts.push(`${summary.removed} removed`);
+      toast(`Synced from your sheet — ${parts.join(', ')}. ${summary.total} leads total.`);
+    },
+    [syncFromRemote, toast],
+  );
+
+  // Auto-sync once per page load, as soon as there is a lead list on screen.
+  const autoSynced = useRef(false);
+  useEffect(() => {
+    if (!isReady) return;
+    const url = getRemoteUrl();
+    setRemoteUrlState(url);
+    if (!url || autoSynced.current || !dataset) return;
+    autoSynced.current = true;
+    void runSync(false);
+  }, [isReady, dataset, runSync]);
+
+  // Surface sync failures without blocking the app — stale leads still work.
+  const reportedError = useRef<string | null>(null);
+  useEffect(() => {
+    if (syncError && syncError !== reportedError.current) {
+      reportedError.current = syncError;
+      toast(syncError, 'error');
+    }
+    if (!syncError) reportedError.current = null;
+  }, [syncError, toast]);
+
   const handleStatusCardFilter = useCallback(
     (status: OutreachStatus | null) => setFilters(statusFilterPatch(status, filters)),
     [filters, setFilters],
@@ -192,6 +240,11 @@ function LeadManager() {
         }}
         onExport={handleExport}
         onReset={() => setResetOpen(true)}
+        remoteUrl={remoteUrl}
+        syncing={syncing}
+        lastSync={lastSync}
+        onSync={() => void runSync(true)}
+        onOpenSyncSettings={() => setSyncSettingsOpen(true)}
       />
 
       <main className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
@@ -278,6 +331,23 @@ function LeadManager() {
         onStatusChange={handleStatusChange}
         onSuccessChange={handleSuccessChange}
         onFieldChange={updateField}
+      />
+
+      <SyncSettingsModal
+        open={syncSettingsOpen}
+        onClose={() => setSyncSettingsOpen(false)}
+        currentUrl={remoteUrl}
+        syncing={syncing}
+        onSaveAndSync={() => {
+          setRemoteUrlState(getRemoteUrl());
+          setSyncSettingsOpen(false);
+          void runSync(true);
+        }}
+        onDisconnect={() => {
+          setRemoteUrlState(null);
+          setSyncSettingsOpen(false);
+          toast('Live sync disconnected. Your leads stay as they are.', 'info');
+        }}
       />
 
       <Modal

@@ -33,3 +33,15 @@ export function importFromRows(
     isSample: true,
   });
 }
+
+/**
+ * Parse an already-fetched workbook or CSV buffer — used by the live sheet
+ * sync, which has bytes rather than a `File`.
+ */
+export async function importRemoteWorkbook(
+  data: ArrayBuffer,
+  label: string,
+): Promise<ImportResult> {
+  const XLSX = await import('xlsx');
+  return parseWorkbook(XLSX, data, label);
+}

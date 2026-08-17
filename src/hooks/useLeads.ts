@@ -36,6 +36,14 @@ import {
   hasEncryptedLeads,
   unlockBundledDataset,
 } from '@/lib/bundledLeads';
+import {
+  fetchRemoteWorkbook,
+  getLastSync,
+  getRemoteUrl,
+  recordSync,
+  RemoteSyncError,
+} from '@/lib/remoteSource';
+import { importRemoteWorkbook } from '@/lib/importer';
 import { isDueOrOverdue } from '@/lib/utils';
 
 export interface LeadStats {
@@ -55,6 +63,14 @@ export interface ReplaceSummary {
   total: number;
 }
 
+export interface SyncSummary {
+  total: number;
+  added: number;
+  removed: number;
+  /** True when the sheet matched what we already had, so nothing visibly changed. */
+  unchanged: boolean;
+}
+
 /** Fields the user can edit directly (status/success have dedicated actions). */
 export type EditableField = 'notes' | 'lastContacted' | 'nextFollowUp';
 
@@ -65,6 +81,9 @@ export function useLeads() {
   const [sortField, setSortField] = useState<SortField>('businessName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isReady, setIsReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState('');
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     // Saved leads always win. A personal build with leads baked in only seeds
@@ -74,6 +93,7 @@ export function useLeads() {
     setManagement(loadManagement());
     const storedFilters = loadFilters<Filters>();
     if (storedFilters) setFilters({ ...EMPTY_FILTERS, ...storedFilters });
+    setLastSync(getLastSync());
     setIsReady(true);
   }, []);
 
@@ -297,6 +317,62 @@ export function useLeads() {
   );
 
   /**
+   * Pull the latest rows from the configured sheet and merge them in.
+   *
+   * Outreach state is re-attached by business name + phone exactly as it is for
+   * a manual "Replace lead file", so syncing never costs notes or statuses.
+   * A sheet that parses to zero leads is refused rather than applied — an empty
+   * or broken response must not be able to wipe a working lead list.
+   */
+  const syncFromRemote = useCallback(async (): Promise<SyncSummary | null> => {
+    const url = getRemoteUrl();
+    if (!url) return null;
+
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      const buffer = await fetchRemoteWorkbook(url);
+      const result = await importRemoteWorkbook(buffer, 'Google Sheet');
+
+      if (result.dataset.leads.length === 0) {
+        throw new RemoteSyncError('The sheet has no lead rows, so it was ignored.');
+      }
+
+      const incomingIds = new Set(result.dataset.leads.map((lead) => lead.id));
+
+      let previousIds: Set<string> = new Set();
+      setDataset((current) => {
+        previousIds = new Set((current?.leads ?? []).map((lead) => lead.id));
+        return result.dataset;
+      });
+
+      setManagement((current) => reconcileManagement(current, [...incomingIds]).kept);
+
+      const added = [...incomingIds].filter((id) => !previousIds.has(id)).length;
+      const removed = [...previousIds].filter((id) => !incomingIds.has(id)).length;
+
+      recordSync();
+      setLastSync(new Date().toISOString());
+
+      return {
+        total: result.dataset.leads.length,
+        added,
+        removed,
+        unchanged: added === 0 && removed === 0,
+      };
+    } catch (error) {
+      const message =
+        error instanceof RemoteSyncError
+          ? error.message
+          : 'Could not read the sheet. Check the link and try again.';
+      setSyncError(message);
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
+  /**
    * Decrypt bundled leads with a password. Returns false on a wrong password so
    * the unlock screen can say so without the caller inspecting errors.
    */
@@ -366,6 +442,10 @@ export function useLeads() {
     importDataset,
     replaceDataset,
     resetAll,
+    syncFromRemote,
+    syncing,
+    lastSync,
+    syncError,
   };
 }
 
