@@ -12,6 +12,7 @@ import { LeadCardList } from '@/components/LeadCardList';
 import { LeadDetailDrawer } from '@/components/LeadDetailDrawer';
 import { LeadTable } from '@/components/LeadTable';
 import { SummaryCards, statusFilterPatch } from '@/components/SummaryCards';
+import { UnlockScreen } from '@/components/UnlockScreen';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ToastProvider, useToast } from '@/components/ui/Toast';
@@ -28,6 +29,8 @@ function LeadManager() {
   const {
     isReady,
     hasBundledLeads,
+    hasEncryptedLeads,
+    unlockLeads,
     dataset,
     leads,
     filteredLeads,
@@ -56,6 +59,8 @@ function LeadManager() {
   const [importError, setImportError] = useState<string | null>(null);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  // Lets the user bypass the unlock screen to import their own file instead.
+  const [skipUnlock, setSkipUnlock] = useState(false);
 
   // Re-read the selected lead from the live list so the drawer reflects edits.
   const selectedLead = useMemo(
@@ -150,6 +155,15 @@ function LeadManager() {
     );
   }, [hasBundledLeads, resetAll, toast]);
 
+  const handleUnlock = useCallback(
+    async (password: string) => {
+      const ok = await unlockLeads(password);
+      if (ok) toast('Unlocked. Your lead list is ready.', 'success');
+      return ok;
+    },
+    [toast, unlockLeads],
+  );
+
   const handleStatusCardFilter = useCallback(
     (status: OutreachStatus | null) => setFilters(statusFilterPatch(status, filters)),
     [filters, setFilters],
@@ -181,7 +195,9 @@ function LeadManager() {
       />
 
       <main className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
-        {!dataset ? (
+        {!dataset && hasEncryptedLeads && !skipUnlock ? (
+          <UnlockScreen onUnlock={handleUnlock} onUseOwnFile={() => setSkipUnlock(true)} />
+        ) : !dataset ? (
           <div className="py-8 sm:py-16">
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-semibold tracking-tight text-navy-950 sm:text-3xl">

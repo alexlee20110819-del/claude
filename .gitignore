@@ -16,3 +16,4 @@ dist-ssr
 
 # Generated personal build data — real contact details, never commit.
 src/data/bundled-leads.json
+src/data/bundled-leads.enc.json

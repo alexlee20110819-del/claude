@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "bundle:leads": "node scripts/bundle-leads.ts",
     "build:private": "vite build",
-    "build:public": "node scripts/bundle-leads.ts --clear && tsc --noEmit && vite build"
+    "build:public": "node scripts/bundle-leads.ts --clear && tsc --noEmit && vite build",
+    "verify:build": "node scripts/verify-build.ts"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",

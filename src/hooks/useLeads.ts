@@ -30,7 +30,12 @@ import {
   saveFilters,
   saveManagement,
 } from '@/lib/storage';
-import { getBundledDataset, hasBundledLeads } from '@/lib/bundledLeads';
+import {
+  getBundledDataset,
+  hasAnyBundledLeads,
+  hasEncryptedLeads,
+  unlockBundledDataset,
+} from '@/lib/bundledLeads';
 import { isDueOrOverdue } from '@/lib/utils';
 
 export interface LeadStats {
@@ -292,6 +297,17 @@ export function useLeads() {
   );
 
   /**
+   * Decrypt bundled leads with a password. Returns false on a wrong password so
+   * the unlock screen can say so without the caller inspecting errors.
+   */
+  const unlockLeads = useCallback(async (password: string): Promise<boolean> => {
+    const unlocked = await unlockBundledDataset(password);
+    if (!unlocked) return false;
+    setDataset(unlocked);
+    return true;
+  }, []);
+
+  /**
    * Clear every local edit. On a build with leads baked in this restores the
    * bundled list rather than emptying the app, so a reset never leaves a
    * personal instance with nothing to work.
@@ -328,7 +344,9 @@ export function useLeads() {
 
   return {
     isReady,
-    hasBundledLeads,
+    hasBundledLeads: hasAnyBundledLeads,
+    hasEncryptedLeads,
+    unlockLeads,
     dataset,
     leads,
     filteredLeads,

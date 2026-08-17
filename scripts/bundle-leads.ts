@@ -22,9 +22,18 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as XLSX from 'xlsx';
 import { parseWorkbook } from '../src/lib/leadParser.ts';
+import { encryptJson } from '../src/lib/leadCrypto.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
+/**
+ * One output path for both plain and encrypted bundles. Using a second filename
+ * for the encrypted variant once let a stale plaintext file survive on a build
+ * machine and get embedded alongside the ciphertext — a single path makes that
+ * impossible, because writing it replaces whatever was there.
+ */
 const OUTPUT = resolve(here, '../src/data/bundled-leads.json');
+/** Written by an older version; removed on sight so it can never be picked up. */
+const LEGACY_ENCRYPTED = resolve(here, '../src/data/bundled-leads.enc.json');
 
 function fail(message: string): never {
   console.error(`\n  ${message}\n`);
@@ -34,9 +43,10 @@ function fail(message: string): never {
 const args = process.argv.slice(2);
 
 if (args.includes('--clear')) {
-  if (existsSync(OUTPUT)) {
-    rmSync(OUTPUT);
-    console.log(`  Removed ${OUTPUT}`);
+  const removed = [OUTPUT, LEGACY_ENCRYPTED].filter((path) => existsSync(path));
+  for (const path of removed) rmSync(path);
+  if (removed.length > 0) {
+    for (const path of removed) console.log(`  Removed ${path}`);
     console.log('  The next build will start from the upload screen again.\n');
   } else {
     console.log('  Nothing to clear — no bundled leads present.\n');
@@ -46,11 +56,18 @@ if (args.includes('--clear')) {
 
 const labelIndex = args.indexOf('--label');
 const label = labelIndex >= 0 ? args[labelIndex + 1] : undefined;
-const inputPath = args.find((arg, i) => !arg.startsWith('--') && i !== labelIndex + 1);
+const passwordIndex = args.indexOf('--password');
+const password = passwordIndex >= 0 ? args[passwordIndex + 1] : undefined;
+const valueIndexes = new Set([labelIndex + 1, passwordIndex + 1].filter((i) => i > 0));
+const inputPath = args.find((arg, i) => !arg.startsWith('--') && !valueIndexes.has(i));
+
+if (passwordIndex >= 0 && !password) {
+  fail('--password needs a value, e.g. --password "my-password"');
+}
 
 if (!inputPath) {
   fail(
-    'Usage: node scripts/bundle-leads.ts <path-to-spreadsheet> [--label "My leads"]\n' +
+    'Usage: node scripts/bundle-leads.ts <file> [--label "Name"] [--password "secret"]\n' +
       '       node scripts/bundle-leads.ts --clear',
   );
 }
@@ -62,7 +79,12 @@ const buffer = readFileSync(absoluteInput);
 const { dataset, warnings } = parseWorkbook(XLSX, buffer, label ?? inputPath.split('/').pop()!);
 
 mkdirSync(dirname(OUTPUT), { recursive: true });
-writeFileSync(OUTPUT, `${JSON.stringify(dataset, null, 2)}\n`, 'utf8');
+
+// Clear a file left by an older version of this script before writing.
+if (existsSync(LEGACY_ENCRYPTED)) rmSync(LEGACY_ENCRYPTED);
+
+const payload = password ? await encryptJson(JSON.stringify(dataset), password) : dataset;
+writeFileSync(OUTPUT, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
 const withUrl = dataset.leads.filter((lead) => lead.sourceUrl).length;
 const withPhone = dataset.leads.filter((lead) => lead.phoneNumber).length;
@@ -71,6 +93,14 @@ console.log(`\n  Bundled ${dataset.leads.length} leads from "${dataset.sheetName
 console.log(`    ${withPhone} with a phone number`);
 console.log(`    ${withUrl} with a Google evidence link`);
 for (const warning of warnings) console.log(`    note: ${warning}`);
-console.log(`\n  Wrote ${OUTPUT}`);
-console.log('  This file holds real contact data and is gitignored. Deploy only to a');
-console.log('  password-protected site.\n');
+if (password) {
+  console.log(`\n  Wrote ${OUTPUT} (encrypted: AES-GCM, PBKDF2-SHA256)`);
+  console.log('  The build ships ciphertext: visitors must enter the password to read');
+  console.log('  any lead data. Keep the password somewhere safe — it is not recoverable');
+  console.log('  from the bundle.\n');
+} else {
+  console.log(`\n  Wrote ${OUTPUT}`);
+  console.log('  WARNING: this is PLAINTEXT contact data and will be readable by anyone');
+  console.log('  who can load the site. Deploy it only behind access control, or re-run');
+  console.log('  with --password to encrypt it.\n');
+}

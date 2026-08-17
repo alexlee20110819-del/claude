@@ -24,6 +24,7 @@ Other scripts:
 | `npm run build`        | Typecheck and build the production bundle                  |
 | `npm run build:public` | Build with any bundled leads **removed** first (see below) |
 | `npm run bundle:leads` | Bake a spreadsheet into the build (see below)              |
+| `npm run verify:build` | Check a build for readable lead data before deploying      |
 | `npm run preview`      | Serve the production build locally                         |
 | `npm run typecheck`    | Run TypeScript with no emit                                |
 
@@ -84,13 +85,32 @@ By default the app starts at the upload screen and holds no data. You can instea
 **personal instance** that opens straight into your lead list on any device, with no import step:
 
 ```bash
-npm run bundle:leads -- path/to/queensland_current_website_leads.xlsx
+# Encrypted — safe to put on a public URL (recommended)
+npm run bundle:leads -- path/to/leads.xlsx --password "your-password"
+
+# Plaintext — only ever behind a login
+npm run bundle:leads -- path/to/leads.xlsx
+
 npm run build:private
+npm run verify:build -- --password "your-password"   # confirms nothing leaked
 ```
 
 This writes `src/data/bundled-leads.json`, which the app loads as its starting dataset. Parsing
 goes through the same `src/lib/leadParser.ts` the browser uses on upload, so a bundled build and
 an uploaded file can never disagree.
+
+### Encrypted bundles
+
+With `--password`, the lead data is encrypted (AES-GCM, PBKDF2-SHA256, 250k iterations) and the
+build ships only ciphertext. Visitors get a password screen; entering the right password decrypts
+the list in the browser and saves it locally, so it is asked for once per device.
+
+The password is the decryption key, not a value compared against something in the page. Skipping
+the screen or reading the bundle directly yields ciphertext, which is what makes this safe to put
+on a public URL — unlike a JavaScript check, which anyone can step past.
+
+The password cannot be recovered from the build. If you lose it, re-run `bundle:leads` with a new
+one. To change it, re-bundle and redeploy.
 
 To go back to an empty build:
 
@@ -103,11 +123,20 @@ npm run bundle:leads -- --clear
 A bundled build **contains real business names and phone numbers inside its JavaScript**. That
 gives up the "data never leaves your browser" property the plain build has. Two rules follow:
 
-1. **Only deploy a bundled build to an access-controlled site** — one requiring a login or a
-   password. On a public URL, anyone could read the lead data straight out of the JS bundle.
+1. **A plaintext bundle belongs only behind access control.** On a public URL anyone can read the
+   contact data straight out of the JS bundle. Use `--password` for anything publicly reachable.
 2. **Never ship a bundled build to a public site by accident.** `src/data/bundled-leads.json` is
    gitignored, but it stays on your machine once generated, so a later `npm run build` would
    silently include it. Use `npm run build:public`, which clears any bundled leads first.
+3. **Run `npm run verify:build` before deploying.** It decrypts the bundle and greps the built
+   output for every bundled business name and phone number, failing if any appears in plain text.
+
+Point 3 exists because of a real failure. An earlier version wrote encrypted bundles to a second
+filename, `bundled-leads.enc.json`. A stale plaintext `bundled-leads.json` left on the build
+machine was still matched by `import.meta.glob`, which embeds *every* match — so a build meant to
+be password-gated shipped readable phone numbers, and the app skipped the password screen because
+it found plaintext to load. Both files now share one path, so writing it replaces whatever was
+there, and `verify:build` checks the artefact rather than trusting the intent.
 
 Saved edits always win over bundled data: the baked-in list only seeds a browser that has nothing
 stored yet, so importing a newer file is never reverted. On a personal build, the reset button
