@@ -125,22 +125,33 @@ function mapColumns(headerRow: unknown[]): Partial<Record<FieldName, number>> {
 
   // Two passes: exact alias matches first, then loose "contains" matches, so a
   // column named exactly "Notes" cannot steal the slot for "Verification Notes".
+  //
+  // Within each pass the *alias* order decides, not the column order. A sheet
+  // can carry more than one plausible column for a field — a "Google Evidence"
+  // column holding link text beside a "Source URL" column holding the real URL —
+  // and scanning headers left to right would take whichever came first. Trying
+  // aliases in order instead means the most specific name always wins, wherever
+  // it sits in the sheet.
   for (const [field, aliases] of Object.entries(FIELD_ALIASES) as [FieldName, string[]][]) {
-    const index = headers.findIndex((h, i) => h !== '' && !taken.has(i) && aliases.includes(h));
-    if (index >= 0) {
-      mapping[field] = index;
-      taken.add(index);
+    for (const alias of aliases) {
+      const index = headers.findIndex((h, i) => h !== '' && !taken.has(i) && h === alias);
+      if (index >= 0) {
+        mapping[field] = index;
+        taken.add(index);
+        break;
+      }
     }
   }
 
   for (const [field, aliases] of Object.entries(FIELD_ALIASES) as [FieldName, string[]][]) {
     if (mapping[field] !== undefined) continue;
-    const index = headers.findIndex(
-      (h, i) => h !== '' && !taken.has(i) && aliases.some((alias) => h.includes(alias)),
-    );
-    if (index >= 0) {
-      mapping[field] = index;
-      taken.add(index);
+    for (const alias of aliases) {
+      const index = headers.findIndex((h, i) => h !== '' && !taken.has(i) && h.includes(alias));
+      if (index >= 0) {
+        mapping[field] = index;
+        taken.add(index);
+        break;
+      }
     }
   }
 
