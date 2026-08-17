@@ -10,3 +10,6 @@ dist-ssr
 *.xls
 *.csv
 !src/**/*.csv
+
+# Netlify CLI local state
+.netlify
