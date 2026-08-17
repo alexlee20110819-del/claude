@@ -30,6 +30,7 @@ import {
   saveFilters,
   saveManagement,
 } from '@/lib/storage';
+import { getBundledDataset, hasBundledLeads } from '@/lib/bundledLeads';
 import { isDueOrOverdue } from '@/lib/utils';
 
 export interface LeadStats {
@@ -61,7 +62,10 @@ export function useLeads() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setDataset(loadDataset());
+    // Saved leads always win. A personal build with leads baked in only seeds
+    // them on a browser that has nothing stored yet, so a later "Replace lead
+    // file" import is never silently reverted to the bundled copy.
+    setDataset(loadDataset() ?? getBundledDataset());
     setManagement(loadManagement());
     const storedFilters = loadFilters<Filters>();
     if (storedFilters) setFilters({ ...EMPTY_FILTERS, ...storedFilters });
@@ -287,9 +291,14 @@ export function useLeads() {
     [management],
   );
 
+  /**
+   * Clear every local edit. On a build with leads baked in this restores the
+   * bundled list rather than emptying the app, so a reset never leaves a
+   * personal instance with nothing to work.
+   */
   const resetAll = useCallback(() => {
     clearAllData();
-    setDataset(null);
+    setDataset(getBundledDataset());
     setManagement({});
     setFilters(EMPTY_FILTERS);
   }, []);
@@ -319,6 +328,7 @@ export function useLeads() {
 
   return {
     isReady,
+    hasBundledLeads,
     dataset,
     leads,
     filteredLeads,

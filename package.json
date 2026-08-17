@@ -13,7 +13,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bundle:leads": "node scripts/bundle-leads.ts",
+    "build:private": "vite build",
+    "build:public": "node scripts/bundle-leads.ts --clear && tsc --noEmit && vite build"
   },
   "dependencies": {
     "lucide-react": "^1.31.0",

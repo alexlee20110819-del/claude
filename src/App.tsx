@@ -27,6 +27,7 @@ export default function App() {
 function LeadManager() {
   const {
     isReady,
+    hasBundledLeads,
     dataset,
     leads,
     filteredLeads,
@@ -141,8 +142,13 @@ function LeadManager() {
     resetAll();
     setResetOpen(false);
     setSelectedLeadId(null);
-    toast('All locally saved leads and edits have been cleared.', 'info');
-  }, [resetAll, toast]);
+    toast(
+      hasBundledLeads
+        ? 'Your edits were cleared and the built-in lead list was restored.'
+        : 'All locally saved leads and edits have been cleared.',
+      'info',
+    );
+  }, [hasBundledLeads, resetAll, toast]);
 
   const handleStatusCardFilter = useCallback(
     (status: OutreachStatus | null) => setFilters(statusFilterPatch(status, filters)),
@@ -291,7 +297,7 @@ function LeadManager() {
       <Modal
         open={resetOpen}
         onClose={() => setResetOpen(false)}
-        title="Reset all local data?"
+        title={hasBundledLeads ? 'Clear all your edits?' : 'Reset all local data?'}
         size="sm"
         footer={
           <>
@@ -299,14 +305,15 @@ function LeadManager() {
               Cancel
             </Button>
             <Button variant="danger" onClick={handleReset} data-autofocus>
-              Delete everything
+              {hasBundledLeads ? 'Clear my edits' : 'Delete everything'}
             </Button>
           </>
         }
       >
         <p className="text-sm leading-relaxed text-slate-600">
-          This clears the imported leads and every status, note and follow-up date saved in this
-          browser. Your original spreadsheet file is not affected. This cannot be undone.
+          {hasBundledLeads
+            ? 'This clears every status, note and follow-up date you have saved in this browser, and restores the built-in lead list to its original state. This cannot be undone.'
+            : 'This clears the imported leads and every status, note and follow-up date saved in this browser. Your original spreadsheet file is not affected. This cannot be undone.'}
         </p>
       </Modal>
     </div>

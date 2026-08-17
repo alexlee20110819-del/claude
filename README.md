@@ -18,12 +18,14 @@ Then open the printed URL (http://localhost:5173 by default).
 
 Other scripts:
 
-| Command             | What it does                                  |
-| ------------------- | --------------------------------------------- |
-| `npm run dev`       | Start the dev server with hot reload           |
-| `npm run build`     | Typecheck and build the production bundle      |
-| `npm run preview`   | Serve the production build locally             |
-| `npm run typecheck` | Run TypeScript with no emit                    |
+| Command                | What it does                                              |
+| ---------------------- | --------------------------------------------------------- |
+| `npm run dev`          | Start the dev server with hot reload                       |
+| `npm run build`        | Typecheck and build the production bundle                  |
+| `npm run build:public` | Build with any bundled leads **removed** first (see below) |
+| `npm run bundle:leads` | Bake a spreadsheet into the build (see below)              |
+| `npm run preview`      | Serve the production build locally                         |
+| `npm run typecheck`    | Run TypeScript with no emit                                |
 
 ## Importing your leads
 
@@ -75,6 +77,41 @@ Your original spreadsheet is never modified — the app only ever reads it.
 - Summary cards double as filters — click **Follow-up** to see just those leads.
 - **Export current view** writes the filtered leads to CSV, including your status, success flag,
   notes, last-contacted, next-follow-up and last-updated values.
+
+## Personal builds: baking leads in
+
+By default the app starts at the upload screen and holds no data. You can instead build a
+**personal instance** that opens straight into your lead list on any device, with no import step:
+
+```bash
+npm run bundle:leads -- path/to/queensland_current_website_leads.xlsx
+npm run build:private
+```
+
+This writes `src/data/bundled-leads.json`, which the app loads as its starting dataset. Parsing
+goes through the same `src/lib/leadParser.ts` the browser uses on upload, so a bundled build and
+an uploaded file can never disagree.
+
+To go back to an empty build:
+
+```bash
+npm run bundle:leads -- --clear
+```
+
+### Read this before deploying a personal build
+
+A bundled build **contains real business names and phone numbers inside its JavaScript**. That
+gives up the "data never leaves your browser" property the plain build has. Two rules follow:
+
+1. **Only deploy a bundled build to an access-controlled site** — one requiring a login or a
+   password. On a public URL, anyone could read the lead data straight out of the JS bundle.
+2. **Never ship a bundled build to a public site by accident.** `src/data/bundled-leads.json` is
+   gitignored, but it stays on your machine once generated, so a later `npm run build` would
+   silently include it. Use `npm run build:public`, which clears any bundled leads first.
+
+Saved edits always win over bundled data: the baked-in list only seeds a browser that has nothing
+stored yet, so importing a newer file is never reverted. On a personal build, the reset button
+clears your edits and restores the bundled list rather than emptying the app.
 
 ## How local persistence works
 

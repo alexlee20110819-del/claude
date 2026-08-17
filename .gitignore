@@ -13,3 +13,6 @@ dist-ssr
 
 # Netlify CLI local state
 .netlify
+
+# Generated personal build data — real contact details, never commit.
+src/data/bundled-leads.json
