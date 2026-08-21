@@ -12,7 +12,7 @@ export const BIZ = {
   // Absolute base for canonical URLs, Open Graph and the sitemap. Change this
   // (and rebuild) the day a custom domain is pointed at the deployment —
   // leaving it wrong tells search engines the real page is somewhere else.
-  origin: 'https://thomson-and-foley-property-maintenance.vercel.app',
+  origin: 'https://claude-alexlee20110819-dels-projects.vercel.app',
   area: 'Bargara, Bundaberg and surrounding areas',
   rating: 5.0,
   reviewCount: 15,
