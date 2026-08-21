@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://thomson-and-foley-property-maintenance.pages.dev/sitemap.xml
+Sitemap: https://thomson-and-foley-property-maintenance.vercel.app/sitemap.xml

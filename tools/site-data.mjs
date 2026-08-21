@@ -9,7 +9,10 @@ export const BIZ = {
   email: 'thomson.foley@outlook.com',
   facebook: 'https://www.facebook.com/thomsonandfoleypropertymaintenance',
   google: 'https://www.google.com/maps/place/?q=place_id:ChIJ_1pjLMphCEARb36NmRuNtzg',
-  origin: 'https://thomson-and-foley-property-maintenance.pages.dev',
+  // Absolute base for canonical URLs, Open Graph and the sitemap. Change this
+  // (and rebuild) the day a custom domain is pointed at the deployment —
+  // leaving it wrong tells search engines the real page is somewhere else.
+  origin: 'https://thomson-and-foley-property-maintenance.vercel.app',
   area: 'Bargara, Bundaberg and surrounding areas',
   rating: 5.0,
   reviewCount: 15,
