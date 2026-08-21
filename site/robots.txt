@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://thomson-and-foley-property-maintenance.pages.dev/sitemap.xml
