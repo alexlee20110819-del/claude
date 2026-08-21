@@ -13,6 +13,7 @@ site/                  ← this is the deploy root
   assets/img/          AVIF at 2–3 widths each + a JPEG fallback
   assets/fonts/        self-hosted Switzer + Playfair Display
   _headers             CSP + cache rules for Cloudflare Pages / Netlify
+  vercel.json          the same rules in Vercel's format
 tools/
   site-data.mjs        all copy, services, reviews, gallery, FAQ, areas
   build-site.mjs       page assembly, <picture> helper, JSON-LD
@@ -82,6 +83,9 @@ filtering.
 Publish the `site/` directory. There is no build step on the host — run
 `npm run build:site` locally and commit the output.
 
+- **Vercel** — root directory `site`, no build command. `site/vercel.json`
+  carries the header and cache rules; it is a static deployment, so nothing is
+  installed or built on the host.
 - **Cloudflare Pages** — build command empty, output directory `site`.
 - **Netlify** — `publish = "site"`, no build command. The repo root
   `netlify.toml` currently deploys a different app; use a separate site or
