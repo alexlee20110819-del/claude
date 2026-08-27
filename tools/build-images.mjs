@@ -36,13 +36,18 @@ const OUT = path.join(ROOT, 'assets', 'img');
    Tier: AVIF is what ~95% of visitors receive, so it carries the quality. The
    JPEG exists only for browsers that cannot take AVIF. */
 const ROLES = {
-  bleed: { widths: [960, 1440], jpg: 1100, avif: 42, jpgQ: 66 },      // hero / band / cta backdrops
+  bleed: { widths: [960, 1440], jpg: 1100, avif: 42, jpgQ: 66 },      // band / cta backdrops
+  showcase: { widths: [960, 1440], jpg: 1100, avif: 68, jpgQ: 82, sharpen: 0.7, native: true }, // the home hero
   panel: { widths: [560, 900, 1200], jpg: 900, avif: 50, jpgQ: 70 },  // tiles, service rows, splits
   full:  { widths: [900, 1400], jpg: 1000, avif: 48, jpgQ: 68 },      // lightbox originals
   micro: { widths: [220, 440], jpg: 440, avif: 55, jpgQ: 76 },        // the hero rating thumbnail
 };
 const roleFor = (n) =>
-  /^((home|about|services|gallery|reviews|contact)-(hero|band)|feature-home|cta-)/.test(n) ? 'bleed'
+  // the home hero is the one photo a visitor actually studies, and its desktop
+  // crop magnifies about half the image width — so it does not take the `bleed`
+  // treatment meant for backdrops sitting behind a heavy scrim
+  n === 'home-hero' ? 'showcase'
+  : /^((about|services|gallery|reviews|contact)-(hero|band)|feature-home|cta-)/.test(n) ? 'bleed'
   : /^card-thumb/.test(n) ? 'micro'
   : /^w\d\d$/.test(n) ? 'full'
   : 'panel';
@@ -50,13 +55,20 @@ const roleFor = (n) =>
 async function emit(file, name, role) {
   const cfg = ROLES[role];
   const meta = await sharp(file).metadata();
-  for (const w of cfg.widths) {
+  // `native` keeps the source's own width as the top tier rather than throwing
+  // resolution away on the nearest preset step below it
+  const widths = cfg.native
+    ? [...new Set([meta.width, ...cfg.widths.filter((w) => w < meta.width)])]
+    : cfg.widths;
+  for (const w of widths) {
     if (w > meta.width * 1.02) continue;
-    await sharp(file).resize({ width: w, withoutEnlargement: true })
-      .avif({ quality: cfg.avif, effort: 3 }).toFile(path.join(OUT, `${name}-${w}.avif`));
+    let img = sharp(file).resize({ width: w, withoutEnlargement: true });
+    if (cfg.sharpen) img = img.sharpen({ sigma: cfg.sharpen });
+    await img.avif({ quality: cfg.avif, effort: 3 }).toFile(path.join(OUT, `${name}-${w}.avif`));
   }
-  await sharp(file).resize({ width: Math.min(cfg.jpg, meta.width), withoutEnlargement: true })
-    .jpeg({ quality: cfg.jpgQ, mozjpeg: true, progressive: true }).toFile(path.join(OUT, `${name}.jpg`));
+  let fb = sharp(file).resize({ width: Math.min(cfg.jpg, meta.width), withoutEnlargement: true });
+  if (cfg.sharpen) fb = fb.sharpen({ sigma: cfg.sharpen });
+  await fb.jpeg({ quality: cfg.jpgQ, mozjpeg: true, progressive: true }).toFile(path.join(OUT, `${name}.jpg`));
 }
 
 await rm(OUT, { recursive: true, force: true });
