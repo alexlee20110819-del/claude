@@ -287,13 +287,13 @@ pages['index.html'] = page({
   <div class="hero__panel">
     <div class="hero__copy">
       <h1 class="hero__h1" data-reveal>A yard that looks <em>looked after.</em></h1>
-      <p class="hero__sub" data-reveal>Lawn mowing, garden tidy-ups, palms and hedges across ${BIZ.area}. Leo and Chantel do the whole job, then take the green waste with them.</p>
+      <p class="hero__sub" data-reveal>Lawn mowing, garden tidy-ups, palms and hedges across ${BIZ.area}. Leo and Shontelle do the whole job, then take the green waste with them.</p>
       <div class="hero__actions" data-reveal>${QUOTE('btn--gold btn--lg', 'Get a free quote', true)}${CALL('btn--ghost btn--lg')}</div>
       <p class="hero__stat" data-reveal><b>5.0</b><span>Rated 5.0 on Google and Facebook by locals across the Bundaberg region</span></p>
     </div>
   </div>
   <div class="hero__shot">
-    <div class="hero__media" data-parallax>${pic('home-hero', { alt: 'Long grass ahead of a mower being pushed through a Bundaberg region block', sizes: '(max-width:980px) 100vw, 48vw', eager: true, ratio: 4 / 3 })}</div>
+    <div class="hero__media" data-parallax>${pic('home-hero', { alt: 'A wide back lawn mown in stripes with a white flowering frangipani in the foreground', sizes: '(max-width:980px) 100vw, 48vw', eager: true, ratio: 4 / 3 })}</div>
     <div class="hero__shade"></div>
     <span class="gseam" aria-hidden="true"></span>
   </div>
@@ -313,7 +313,7 @@ pages['index.html'] = page({
 <section class="ribbon" aria-label="At a glance">
   <div class="wrap ribbon__row">
     <div class="ribbon__i" data-reveal><b>5.0<i class="star">★</i></b><span>On Google and Facebook</span></div>
-    <div class="ribbon__i" data-reveal><b>Leo &amp; Chantel</b><span>The two people who turn up</span></div>
+    <div class="ribbon__i" data-reveal><b>Leo &amp; Shontelle</b><span>The two people who turn up</span></div>
     <div class="ribbon__i" data-reveal><b>Free</b><span>On-site quotes, no pressure</span></div>
     <div class="ribbon__i" data-reveal><b>Bargara</b><span>Bundaberg and surrounding areas</span></div>
   </div>
@@ -322,19 +322,19 @@ pages['index.html'] = page({
 <!-- STORY -->
 <section class="section" id="about" aria-labelledby="story-h">
   <div class="wrap split">
-    <div class="split__media" data-reveal>${pic('home-story', { alt: 'A ute and caged trailer parked at the kerb beside a freshly mown verge', sizes: '(max-width:980px) 92vw, 44vw', ratio: 4 / 3 })}</div>
+    <div class="split__media" data-reveal>${pic('w03', { alt: 'A wide back lawn mown in even stripes behind a home', sizes: '(max-width:980px) 92vw, 44vw', ratio: 4 / 3 })}</div>
     <div class="split__body">
       <div class="srule" data-reveal></div>
       <span class="eyebrow" data-reveal>Who you are dealing with</span>
       <h2 class="h2" id="story-h" data-reveal>A small outfit, <em>and that is the point.</em></h2>
-      <p class="lead" data-reveal>Thomson &amp; Foley is Leo and Chantel. You deal with the two of them from the quote to the clean-up, so nothing gets lost between an office and a crew. They cover all lawn care and gardening work across ${BIZ.area}, and they finish the job properly before they leave.</p>
+      <p class="lead" data-reveal>Thomson &amp; Foley is Leo and Shontelle. You deal with the two of them from the quote to the clean-up, so nothing gets lost between an office and a crew. They cover all lawn care and gardening work across ${BIZ.area}, and they finish the job properly before they leave.</p>
       <ul class="ticks" data-reveal>
         <li>All lawn care and gardening services, one call</li>
         <li>Green waste loaded and taken away</li>
         <li>Quick to answer, and they turn up when they say</li>
         <li>The job area left tidy on completion</li>
       </ul>
-      <a class="btn btn--dark" data-reveal href="about.html">More about Leo and Chantel ${ICON.arrow}</a>
+      <a class="btn btn--dark" data-reveal href="about.html">More about Leo and Shontelle ${ICON.arrow}</a>
     </div>
   </div>
 </section>
@@ -397,7 +397,7 @@ ${featureBand({
       <a class="btn btn--line" data-reveal href="gallery.html">Full gallery</a>
     </div>
     <div class="gal">
-      ${[['w03', 'g1', 'A wide back lawn mown in even stripes behind a home'],
+      ${[['w00', 'g1', 'A ute and caged trailer parked at the kerb beside a freshly mown verge'],
          ['w06', 'g2', 'Curved concrete paths running through a mown front lawn'],
          ['w09', 'g3', 'A shaped shrub bed topped with mulch beside a driveway'],
          ['w27', 'g4', 'A tandem trailer loaded high with cut branches and garden waste']]
@@ -416,14 +416,14 @@ ${bigcta({ img: 'cta-home', alt: 'A wide mown lawn in even stripes with palms al
 /* ── About ───────────────────────────────────────────────────────────────── */
 pages['about.html'] = page({
   file: 'about.html',
-  title: `About Leo & Chantel | ${BIZ.name}`,
-  description: `Thomson & Foley is Leo and Chantel, a two-person lawn and garden business working across ${BIZ.area}. Rated 5.0 on Google and Facebook.`,
+  title: `About Leo & Shontelle | ${BIZ.name}`,
+  description: `Thomson & Foley is Leo and Shontelle, a two-person lawn and garden business working across ${BIZ.area}. Rated 5.0 on Google and Facebook.`,
   head: preload('about-hero', '100vw'),
   schema: [localBusiness, crumbSchema('About', 'about.html')],
   body: `${pagehero({
     img: 'about-hero', alt: 'Curved concrete paths running through a mown front lawn', crumb: 'About',
     h1: 'Two people, <em>one standard.</em>',
-    sub: `${BIZ.name} is Leo and Chantel, working across ${BIZ.area}.`,
+    sub: `${BIZ.name} is Leo and Shontelle, working across ${BIZ.area}.`,
     actions: QUOTE('btn--gold btn--lg', 'Get a free quote', true) + CALL('btn--ghost btn--lg'),
   })}
 
@@ -434,7 +434,7 @@ pages['about.html'] = page({
       <div class="srule" data-reveal></div>
       <span class="eyebrow" data-reveal>The business</span>
       <h2 class="h2" id="about-h" data-reveal>The people who <em>actually turn up.</em></h2>
-      <p class="lead" data-reveal>Leo and Chantel run Thomson &amp; Foley themselves. They quote the job, they do the job, and they are the ones you call if anything needs sorting. Customers name them both in their reviews, which is what happens when the same two people keep coming back.</p>
+      <p class="lead" data-reveal>Leo and Shontelle run Thomson &amp; Foley themselves. They quote the job, they do the job, and they are the ones you call if anything needs sorting. Customers name them both in their reviews, which is what happens when the same two people keep coming back.</p>
       <p class="lead" data-reveal>What they advertise is what they do: all lawn care and gardening services, with a high quality finish. Mowing, full garden tidy-ups, tree pruning, hedge trimming, green waste removals, mulch installs and light landscaping, plus vacant block and acreage mowing when a place has been left a while.</p>
       <ul class="ticks" data-reveal>
         <li>Quotes given on site, free and with no pressure</li>
@@ -551,7 +551,7 @@ pages['gallery.html'] = page({
   body: `${pagehero({
     img: 'gallery-hero', alt: 'A mown nature strip running along a kerb toward the road', crumb: 'Our Work',
     h1: 'Real yards, <em>real results.</em>',
-    sub: 'Every photo below is a job Leo and Chantel finished around Bargara and the Bundaberg region.',
+    sub: 'Every photo below is a job Leo and Shontelle finished around Bargara and the Bundaberg region.',
     actions: QUOTE('btn--gold btn--lg', 'Get a free quote', true) + CALL('btn--ghost btn--lg'),
   })}
 
@@ -660,7 +660,7 @@ pages['contact.html'] = page({
     <div class="contact">
       <aside class="cinfo" data-reveal>
         <h2>Get in touch</h2>
-        <p>Call or text for the quickest reply, or send the form and Leo or Chantel will get straight back to you.</p>
+        <p>Call or text for the quickest reply, or send the form and Leo or Shontelle will get straight back to you.</p>
         <div class="cline"><a href="${BIZ.phoneHref}"><span class="ic">${ICON.phone}</span><div><small>Call or text</small><b>${BIZ.phone}</b></div></a></div>
         <div class="cline"><a href="mailto:${BIZ.email}"><span class="ic">${ICON.mail}</span><div><small>Email</small><b>${BIZ.email}</b></div></a></div>
         <div class="cline"><a href="${BIZ.facebook}" target="_blank" rel="noopener"><span class="ic">${ICON.fb}</span><div><small>Message</small><b>Thomson &amp; Foley on Facebook</b></div></a></div>
@@ -696,7 +696,7 @@ pages['contact.html'] = page({
         <div class="cform__ok" role="status">
           <span class="ok-ic">${ICON.check}</span>
           <h3>Thanks, that is sent.</h3>
-          <p>Leo or Chantel will get back to you shortly. If it is urgent, call or text ${BIZ.phone}.</p>
+          <p>Leo or Shontelle will get back to you shortly. If it is urgent, call or text ${BIZ.phone}.</p>
         </div>
       </div>
     </div>
