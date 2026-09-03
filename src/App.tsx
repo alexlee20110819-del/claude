@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Inbox, ShieldCheck } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import type { Filters, ImportResult, Lead, OutreachStatus } from '@/types/lead';
 import { useLeads } from '@/hooks/useLeads';
 import { importLeadFile } from '@/lib/importer';
@@ -23,6 +24,7 @@ export default function App() {
   return (
     <ToastProvider>
       <LeadManager />
+      <Analytics />
     </ToastProvider>
   );
 }
